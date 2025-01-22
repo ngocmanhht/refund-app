@@ -14,6 +14,8 @@ import {
 import Home from "./screens/home";
 import Login from "./screens/login";
 import Lazada from "./screens/lazada";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./services/query-client";
 
 function App() {
   const theme = createTheme({});
@@ -31,14 +33,15 @@ function App() {
   // }
   return (
     <MantineProvider theme={theme}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/home" />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/lazada" element={<Lazada />} />
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Navigate to="/home" />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/lazada" element={<Lazada />} />
 
-          {/* <Route path='/' element={<ProtectedRoute />}>
+            {/* <Route path='/' element={<ProtectedRoute />}>
                         <Route
                           path='/conversations'
                           element={<ConversationListScreen />}
@@ -54,8 +57,9 @@ function App() {
                           }
                         />
                       </Route> */}
-        </Routes>
-      </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
+      </QueryClientProvider>
     </MantineProvider>
   );
 }

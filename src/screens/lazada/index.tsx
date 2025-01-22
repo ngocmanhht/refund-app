@@ -32,6 +32,8 @@ import {
   IconShoppingCart,
   IconX,
 } from "@tabler/icons-react";
+import { useMutation } from "@tanstack/react-query";
+import { lazadaService } from "../../services/lazada-service";
 
 export default function Lazada() {
   const [searchResults, setSearchResults] = useState<Array<any> | null>(null);
@@ -58,24 +60,23 @@ export default function Lazada() {
       width: 250,
     },
   ];
+
+  const searchProductCommissionMutation = useMutation({
+    mutationFn: (link: string) => lazadaService.getProductCommission(link),
+    onSuccess: (data) => {
+      const results = [data?.data?.data];
+      setSearchResults(results);
+    },
+    onError: () => {
+      setSearchResults([]);
+    },
+  });
+  const [link, setLink] = useState("");
   const handleSearch = () => {
     // Fake search logic for demonstration
-    const results =
-      Math.random() > 0.5
-        ? [
-            {
-              id: 1,
-              title:
-                "CAMEL MENS AUTOMATIC BUCKLE BELT 100% GENUINE COW LEATHER BUSINESS CASUAL STRAP BELT",
-              description: "Con lạc đà",
-              price: "188.990 ₫",
-              cashback: "4.763 ₫",
-              image: "/camel-belt.jpg",
-            },
-          ]
-        : [];
+    searchProductCommissionMutation.mutate(link);
 
-    setSearchResults(results);
+    // setSearchResults(results);
   };
 
   return (
@@ -95,12 +96,14 @@ export default function Lazada() {
         <TextInput
           placeholder="Dán link sản phẩm tại đây"
           label="Link sản phẩm"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
           withAsterisk
           className="flex-grow"
         />
-        <Button variant="outline" color="blue">
+        {/* <Button variant="outline" color="blue">
           Dán link
-        </Button>
+        </Button> */}
         <Button variant="filled" color="blue" onClick={handleSearch}>
           Search
         </Button>
@@ -137,24 +140,22 @@ export default function Lazada() {
                     <div className="flex-1 flex flex-col justify-between">
                       <div className="flex flex-col p-1">
                         <span className="overflow-hidden text-ellipsis line-clamp-3 font-semibold">
-                          LILYSHOES GIÀY THỂ THAO THƯỜNG NGÀY CHO NAM MỚI GIÀY
-                          VẢI BỐ ĐA NĂNG THỜI TRANG GIÀY CHẠY THƯỜNG NGÀY NGOÀI
-                          TRỜI
+                          {searchResults[0]?.productName}
                         </span>
                         <div className="flex flex-col justify-between">
                           <span className="overflow-hidden text-ellipsis line-clamp-1">
-                            No Brand
+                            {searchResults[0]?.shopName}
                           </span>
                           <span>0</span>
                         </div>
                         <span className="text-base font-bold leading-5">
-                          99.000&nbsp;₫
+                          {searchResults[0]?.price}&nbsp;₫
                         </span>
                         <span className="text-blue-800">
                           Hoàn tiền đến:
                           <strong className="font-bold text-base leading-3">
                             {" "}
-                            1.960&nbsp;₫
+                            {searchResults[0]?.commission}&nbsp;₫
                           </strong>
                         </span>
                       </div>
