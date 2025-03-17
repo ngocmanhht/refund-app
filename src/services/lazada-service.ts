@@ -1,8 +1,16 @@
-import { post } from ".";
+import { get, post } from ".";
+import { APP_TOKEN } from "../config/const";
 
 class LazadaService {
-  getProductCommission = async (link: string) => {
-    return await post("lazada/product-commission", { link });
+  getProductIdFromLink = async (link: string) => {
+    return await get("/api/v1/getProductIdFromShortLink", {
+      link: link,
+    });
+  };
+  getProductInfo = async (productId: string) => {
+    return await get("/api/v1/GetProductById", {
+      productId: productId,
+    });
   };
 }
 

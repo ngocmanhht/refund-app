@@ -3,7 +3,8 @@ import axios, {
   HeadersDefaults,
   RawAxiosRequestHeaders,
 } from "axios";
-// import { NavigationService } from 'navigators/navigation-service';
+import { uiStore } from "../stores/ui";
+import { toast } from "react-toastify";
 const defaultHeaders:
   | RawAxiosRequestHeaders
   | AxiosHeaders
@@ -19,13 +20,11 @@ const instance = axios.create({
 instance.defaults.baseURL = process.env.REACT_APP_API_URL;
 instance.interceptors.request.use(async (config: any) => {
   try {
-    // const accessToken = await AsyncStorage.getItem(AsyncStorageKey.AccessToken);
-
-    const accessToken = null;
+    const accessToken = localStorage.getItem("accessToken");
     config.headers = {
       ...config.headers,
     };
-
+    console.log("accessToken123", accessToken);
     if (accessToken) {
       // append token to request headers in case of available access token in async storage
       config.headers = {
@@ -50,6 +49,8 @@ instance.interceptors.response.use(
   },
   async (error) => {
     console.log("err11", error);
+    const message = error?.response?.data?.message;
+    toast.error(message);
     //   if (error?.status === 401) {
     //     // await asyncStorageService.clearAccessToken();
     //     //   NavigationService.reset(Screen.Login);
@@ -78,15 +79,10 @@ instance.interceptors.response.use(
 );
 
 export const get = async (path: string, params: any) => {
-  try {
-    const res = await instance.get(path, {
-      params: params,
-    });
-    return res?.data;
-  } catch (error) {
-    console.log("error33", error);
-    return null;
-  }
+  const res = await instance.get(path, {
+    params: params,
+  });
+  return res;
 };
 
 export const post = async (path: string, params: any) => {

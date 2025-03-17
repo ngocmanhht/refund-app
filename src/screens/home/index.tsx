@@ -2,6 +2,7 @@ import { Button, Text, Card, Grid, Container } from "@mantine/core";
 import { Link, useNavigate } from "react-router-dom";
 import { Header } from "../../components/header";
 import { IconArrowRight } from "@tabler/icons-react";
+import { Content, Lazada, Shopee, Tiktok } from "../../assets/images";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -49,8 +50,8 @@ export default function Home() {
               </Button>
             </div>
             <img
-              src="/dragon.png"
-              alt="Dragon Mascot"
+              src={Content}
+              alt="Dragon Mascot1"
               style={{ width: "150px", height: "auto" }}
             />
           </div>
@@ -67,8 +68,7 @@ export default function Home() {
                   href: "/shopee",
                   cashback: "30.28%",
                   color: "#ff6f61",
-                  image:
-                    "https://th.bing.com/th/id/OIP.NWY_ywjL5lqFqUN-J4p1ggHaHa?w=156&h=180&c=7&r=0&o=5&dpr=2&pid=1.7",
+                  image: Shopee,
                 },
                 {
                   title: "TikTok",
@@ -76,8 +76,7 @@ export default function Home() {
 
                   cashback: "20.02%",
                   color: "#8a2be2",
-                  image:
-                    "https://th.bing.com/th/id/OIP.6Aw5hS2-wYA5NmUkSgISrgHaHa?w=168&h=180&c=7&r=0&o=5&dpr=2&pid=1.7",
+                  image: Tiktok,
                 },
                 {
                   title: "Lazada",
@@ -85,8 +84,7 @@ export default function Home() {
 
                   cashback: "22.36%",
                   color: "#00aaff",
-                  image:
-                    "https://th.bing.com/th/id/OIP.CXGqkz0AdD6i2_LffsMZgAHaD4?w=294&h=180&c=7&r=0&o=5&dpr=2&pid=1.7",
+                  image: Lazada,
                 },
               ].map((item, index) => (
                 <Grid.Col span={4} key={index}>
@@ -96,7 +94,7 @@ export default function Home() {
                   >
                     <div className="flex-1 flex flex-col justify-end items-center overflow-hidden h-full aspect-square">
                       <div className="flex h-2/3 aspect-square flex-col items-center justify-center p-1">
-                        <div className="relative aspect-square bg-black rounded-lg flex justify-center items-center h-5/6">
+                        <div className="relative aspect-square bg-black rounded-lg flex justify-center items-center h-5/6 object-cover">
                           <img
                             src={item.image}
                             alt={item.title}

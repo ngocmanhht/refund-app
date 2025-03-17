@@ -3,3 +3,7 @@ export { default as LazadaInstructionStep2 } from "./lazada-instruction-step2.pn
 export { default as LazadaInstructionStep3 } from "./lazada-instruction-step3.png";
 export { default as LazadaInstructionStep4 } from "./lazada-instruction-step4.png";
 export { default as LazadaFull } from "./lazada-full.png";
+export { default as Lazada } from "./lazada.png";
+export { default as Tiktok } from "./tiktok.png";
+export { default as Shopee } from "./shopee.png";
+export { default as Content } from "./content.png";

@@ -1,8 +1,8 @@
-"use client";
-
-import { Button, Text, TextInput } from "@mantine/core";
+import { Box, Button, PasswordInput, Text, TextInput } from "@mantine/core";
+import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
+import { userService } from "../../services/user-service";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,14 +13,26 @@ export default function Login() {
     },
   });
 
+  const loginMutation = useMutation({
+    mutationFn: ({ email, password }: { email: string; password: string }) =>
+      userService.login(email, password),
+    onSuccess: (data: any) => {
+      const accessToken = data?.access_token;
+      localStorage.setItem("accessToken", accessToken);
+      navigate("/home");
+    },
+  });
+
   const onSubmit = (data: any) => {
-    // console.log(getValues());
-    navigate("/home");
+    loginMutation.mutate({
+      email: data.email,
+      password: data.password,
+    });
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
+      <div className="bg-white p-8 rounded-lg shadow-md w-96 relative">
         <Text size="xl" className="text-center mb-6 text-gray-800 font-bold">
           Đăng nhập
         </Text>
@@ -32,7 +44,7 @@ export default function Login() {
             required: "Email không thể bỏ trống",
             pattern: {
               value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: "Email không hợp lệ",
+              message: "Email phải đúng định dạng email",
             },
           }}
           name="email"
@@ -56,17 +68,24 @@ export default function Login() {
         <Controller
           control={control}
           name="password"
-          rules={{ required: "Mật khẩu không thể bỏ trống" }}
+          rules={{
+            required: "Mật khẩu không thể bỏ trống",
+            minLength: {
+              value: 6,
+              message: "Mật khẩu phải nhất 6 ky tự",
+            },
+          }}
           render={({
             field: { onChange, value, onBlur },
             fieldState: { error },
           }) => (
-            <TextInput
+            <PasswordInput
               value={value}
               onChange={onChange}
               onBlur={onBlur}
-              type="password"
               label="Mật khẩu"
+              type="password"
+              security=""
               placeholder="Nhập mật khẩu"
               error={error?.message}
               className="mb-4"

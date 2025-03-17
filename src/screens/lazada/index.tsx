@@ -32,8 +32,10 @@ import {
   IconShoppingCart,
   IconX,
 } from "@tabler/icons-react";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { lazadaService } from "../../services/lazada-service";
+import { LazadaProduct } from "../../model/product";
+import { Header } from "../../components/header";
 
 export default function Lazada() {
   const [searchResults, setSearchResults] = useState<Array<any> | null>(null);
@@ -60,68 +62,69 @@ export default function Lazada() {
       width: 250,
     },
   ];
-
-  const searchProductCommissionMutation = useMutation({
-    mutationFn: (link: string) => lazadaService.getProductCommission(link),
-    onSuccess: (data) => {
-      const results = [data?.data?.data];
-      setSearchResults(results);
-    },
-    onError: () => {
-      setSearchResults([]);
-    },
-  });
   const [link, setLink] = useState("");
-  const handleSearch = () => {
-    // Fake search logic for demonstration
-    searchProductCommissionMutation.mutate(link);
 
-    // setSearchResults(results);
-  };
+  const { data, refetch } = useQuery({
+    queryKey: ["getProductIdFromLink", link],
+    queryFn: () => lazadaService.getProductIdFromLink(link),
+    enabled: !!link,
+  });
+
+  const response = data as any;
+
+  const { data: productDetails } = useQuery<{
+    data?: LazadaProduct;
+  }>({
+    queryKey: ["getProductDetails", response],
+    queryFn: () => lazadaService.getProductInfo(response?.productId),
+    enabled: !!response?.productId,
+  });
+  console.log("productDetails", productDetails?.data);
 
   return (
-    <div className="bg-gray-100 min-h-screen p-8">
-      {/* Cashback Percentage */}
-      <div className="text-center bg-white shadow-md rounded-lg p-4 mb-6">
-        <div className="flex justify-center items-center mb-6">
-          <img src={LazadaFull} alt="Lazada" className="w-32" />
+    <div className="bg-gray-200 min-h-screen p-8 ">
+      <Header />
+      <div className="bg-white  flex-col justify-center items-center content-center align-center mx-auto p-8 rounded-xl mt-2">
+        <div className="text-center  shadow-md rounded-lg p-4 mb-6 ">
+          <div className="flex justify-center items-center mb-6">
+            <img src={LazadaFull} alt="Lazada" className="w-32" />
+          </div>
+          <Text className="text-gray-800 text-lg font-medium">
+            Hoàn tiền đến{" "}
+            <span className="text-blue-600 font-bold">22.36%</span>
+          </Text>
         </div>
-        <Text className="text-gray-800 text-lg font-medium">
-          Hoàn tiền đến <span className="text-blue-600 font-bold">22.36%</span>
-        </Text>
-      </div>
 
-      {/* Link Input */}
-      <div className="mb-6 flex items-end gap-2">
-        <TextInput
-          placeholder="Dán link sản phẩm tại đây"
-          label="Link sản phẩm"
-          value={link}
-          onChange={(e) => setLink(e.target.value)}
-          withAsterisk
-          className="flex-grow"
-        />
-        {/* <Button variant="outline" color="blue">
+        {/* Link Input */}
+        <div className="mb-6 flex items-end gap-2">
+          <TextInput
+            placeholder="Dán link sản phẩm tại đây"
+            label="Link sản phẩm"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            withAsterisk
+            className="flex-grow"
+          />
+          {/* <Button variant="outline" color="blue">
           Dán link
         </Button> */}
-        <Button variant="filled" color="blue" onClick={handleSearch}>
-          Search
-        </Button>
-      </div>
-
-      {/* Search Results */}
-      {searchResults === null ? (
-        <div className="bg-white flex-col flex justify-center items-center p-2 mb-4">
-          <div className="w-40">
-            <IconDiscount size={100} color={theme.colors.blue[6]} />
-          </div>
-          <div className="text-center px-12">
-            <p> Nhập link Lazada để shop tìm sản phẩm và hoàn tiền!</p>
-          </div>
+          <Button variant="filled" color="blue" onClick={() => {}}>
+            Search
+          </Button>
         </div>
-      ) : searchResults.length > 0 ? (
-        <Grid className="mb-6" gutter={24}>
-          {searchResults.map((product) => (
+
+        {/* Search Results */}
+        {!!!productDetails ? (
+          <div className="bg-white flex-col flex justify-center items-center p-2 mb-4">
+            <div className="w-40">
+              <IconDiscount size={100} color={theme.colors.blue[6]} />
+            </div>
+            <div className="text-center px-12">
+              <p> Nhập link Lazada để shop tìm sản phẩm và hoàn tiền!</p>
+            </div>
+          </div>
+        ) : !!productDetails?.data ? (
+          <Grid className="mb-6" gutter={24}>
             <div className="w-full">
               <div className="flex gap-1 items-center p-2">
                 <div className="h-10 aspect-square bg-gradient-to-br p-2 from-blue-600 to-blue-800 rounded-full"></div>
@@ -134,28 +137,40 @@ export default function Lazada() {
                 <div className="p-1 w-full">
                   <div className="flex text-xs md:text-base gap-3 relative w-full bg-white shadow-md rounded-lg h-80 ">
                     <div className="flex justify-center flex-1">
-                      <div className="w-full aspect-square overflow-hidden rounded-lg border border-black"></div>
+                      <div className="w-full aspect-square overflow-hidden rounded-lg border border-black">
+                        <img
+                          src={productDetails?.data?.imageUrl}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
                     </div>
 
                     <div className="flex-1 flex flex-col justify-between">
                       <div className="flex flex-col p-1">
                         <span className="overflow-hidden text-ellipsis line-clamp-3 font-semibold">
-                          {searchResults[0]?.productName}
+                          {productDetails?.data?.title}
                         </span>
                         <div className="flex flex-col justify-between">
                           <span className="overflow-hidden text-ellipsis line-clamp-1">
-                            {searchResults[0]?.shopName}
+                            {productDetails?.data?.sellerName}
                           </span>
-                          <span>0</span>
+                        </div>
+                        <div className="flex flex-row gap-x-4">
+                          <span className="overflow-hidden text-ellipsis line-clamp-1">
+                            {"Luợt bán"}
+                          </span>
+                          <span className="overflow-hidden text-ellipsis line-clamp-1">
+                            {productDetails?.data.soldCount}
+                          </span>
                         </div>
                         <span className="text-base font-bold leading-5">
-                          {searchResults[0]?.price}&nbsp;₫
+                          {productDetails?.data.originalPrice}&nbsp;₫
                         </span>
                         <span className="text-blue-800">
                           Hoàn tiền đến:
                           <strong className="font-bold text-base leading-3">
                             {" "}
-                            {searchResults[0]?.commission}&nbsp;₫
+                            {productDetails?.data.originalMoneyCanEarn}&nbsp;₫
                           </strong>
                         </span>
                       </div>
@@ -173,191 +188,187 @@ export default function Lazada() {
                 </div>
               </div>
 
-              <div>
-                <div className="text-sm w-full cursor-pointer">
-                  <h4 className="text-center bg-amber-200 p-1">
-                    <p>Số tiền hoàn có thể thấp hơn thực tế hoặc bằng 0đ</p>
-                    <p>
-                      Vui lòng đọc kỹ{" "}
-                      <span className="font-bold underline">
-                        Điều kiện &amp; Điều khoản
-                      </span>{" "}
-                      trước khi mua hàng
-                    </p>
-                  </h4>
-                </div>
+              <div className="text-sm w-full cursor-pointer mt-4">
+                <h4 className="text-center bg-amber-200 p-1">
+                  <p>Số tiền hoàn có thể thấp hơn thực tế hoặc bằng 0đ</p>
+                  <p>
+                    Vui lòng đọc kỹ{" "}
+                    <span className="font-bold underline">
+                      Điều kiện &amp; Điều khoản
+                    </span>{" "}
+                    trước khi mua hàng
+                  </p>
+                </h4>
               </div>
             </div>
-          ))}
-        </Grid>
-      ) : (
-        <div className="text-center bg-white rounded-lg p-6 mb-6">
-          <Text size="lg" className="font-semibold mb-4">
-            KẾT QUẢ TÌM KIẾM
-          </Text>
-          <div className="flex flex-col items-center">
-            <img
-              src={
-                "https://cdn.dribbble.com/users/3035925/screenshots/14046425/no_results_found_4x.jpg"
-              }
-              alt="No Results"
-              className="mb-4 h-60 aspect-square object-contain"
-            />
-            <Text className="text-gray-700 mb-2">
-              Ui tiếc quá, mặt hàng này của bạn không được hoàn tiền rồi.
+          </Grid>
+        ) : (
+          <div className="text-center bg-white rounded-lg p-6 mb-6">
+            <Text size="lg" className="font-semibold mb-4">
+              KẾT QUẢ TÌM KIẾM
             </Text>
-            <div className="text-blue-500 underline">
-              <a href="https://zalo.me/g/odqcwk307">Báo lỗi tại đây</a>
+            <div className="flex flex-col items-center">
+              <img
+                src={
+                  "https://cdn.dribbble.com/users/3035925/screenshots/14046425/no_results_found_4x.jpg"
+                }
+                alt="No Results"
+                className="mb-4 h-60 aspect-square object-contain"
+              />
+              <Text className="text-gray-700 mb-2">
+                Ui tiếc quá, mặt hàng này của bạn không được hoàn tiền rồi.
+              </Text>
+              <div className="text-blue-500 underline">
+                <a href="https://zalo.me/g/odqcwk307">Báo lỗi tại đây</a>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Swiper for Cashback Steps */}
-      <div className="bg-white rounded-lg p-6 mb-6">
-        <Swiper
-          spaceBetween={16}
-          slidesPerView={2}
-          // className="bg-white shadow-md rounded-lg p-4"
-        >
-          {steps.map((step, index) => (
-            <SwiperSlide key={index}>
-              <div className="text-center">
-                <img
-                  src={step.image}
-                  alt={`Step ${index + 1}`}
-                  // width="100%"
-                  // height={100}
-                  // ="contain"
-                  className="mx-auto mb-2 border border-gray-300 h-48 aspect-[2/1]"
-                />
-                {/* <Text className="text-gray-700 font-medium">{step.title}</Text> */}
-                <div className="text-xs md:text-sm">
-                  <span className="font-bold">{step.title}</span>
+        {/* Swiper for Cashback Steps */}
+        <div className="bg-white rounded-lg p-6 mb-6">
+          <Swiper spaceBetween={16} slidesPerView={2}>
+            {steps.map((step, index) => (
+              <SwiperSlide key={index}>
+                <div className="text-center">
+                  <img
+                    src={step.image}
+                    alt={`Step ${index + 1}`}
+                    // width="100%"
+                    // height={100}
+                    // ="contain"
+                    className="mx-auto mb-2 border border-gray-300 h-48 aspect-[2/1]"
+                  />
+                  <div className="text-xs md:text-sm">
+                    <span className="font-bold">{step.title}</span>
+                  </div>
                 </div>
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
-
-      {/* Terms and Conditions */}
-      <div className="bg-white rounded-lg p-6 mb-6">
-        <div className="flex gap-1 justify-start items-center">
-          <div className="h-10 p-2 aspect-square bg-gradient-to-br from-blue-600 to-blue-800 rounded-full"></div>
-          <div className="flex flex-col text-sm text-gray-700">
-            <span>Tham khảo</span>
-            <span className="font-bold">ĐIỀU KHOẢN HOÀN TIỀN</span>
-          </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
         </div>
-        <div className="bg-white">
-          <div className="p-2">
-            <h3 className="text-xs font-bold text text-orange-600 py-1">
-              THỜI GIAN HOÀN TIỀN
-            </h3>
-            <div className="rounded-xl border">
-              <div className="flex items-center border-b last:border-none">
-                <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
-                  <IconClock stroke={2} />
-                </div>
-                <p className="text-xs">
-                  Thời gian cập nhật đơn hàng là 24 - 48H kể từ khi đặt hàng
-                  thành công. Nếu sau 48H không thấy hiển thị đơn tức là đơn
-                  không được ghi nhận trên app.
-                </p>
-              </div>
-              <div className="flex items-center border-b last:border-none">
-                <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
-                  <IconCalendar stroke={2} />
-                </div>
-                <p className="text-xs">
-                  Thời gian duyệt đơn hàng Shopee là 30 ngày, Lazada là 45 ngày
-                  và Tiktok là 7 ngày kể từ khi khách hàng bấm Đã nhận hàng trên
-                  app.
-                </p>
-              </div>
-              <div className="flex items-center border-b last:border-none">
-                <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
-                  <IconMoneybag stroke={2} />
-                </div>
-                <p className="text-xs">
-                  Số dư hoàn tiền có thể rút tối thiểu là 10.000đ và khả dụng
-                  rút số dư vào 10H ngày 18, 29, 30 hàng tháng
-                </p>
-              </div>
+
+        {/* Terms and Conditions */}
+        <div className="bg-white rounded-lg p-6 mb-6">
+          <div className="flex gap-1 justify-start items-center">
+            <div className="h-10 p-2 aspect-square bg-gradient-to-br from-blue-600 to-blue-800 rounded-full"></div>
+            <div className="flex flex-col text-sm text-gray-700">
+              <span>Tham khảo</span>
+              <span className="font-bold">ĐIỀU KHOẢN HOÀN TIỀN</span>
             </div>
           </div>
-          <div className="p-2">
-            <h3 className="text-xs font-bold text text-orange-600 py-1">
-              ĐIỀU KIỆN CHẤP NHẬN HOÀN TIỀN
-            </h3>
-            <div className="rounded-xl border">
-              <div className="flex items-center border-b last:border-none">
-                <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
-                  <IconInfoCircle stroke={2} />
+          <div className="bg-white">
+            <div className="p-2">
+              <h3 className="text-xs font-bold text text-orange-600 py-1">
+                THỜI GIAN HOÀN TIỀN
+              </h3>
+              <div className="rounded-xl border">
+                <div className="flex items-center border-b last:border-none">
+                  <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
+                    <IconClock stroke={2} />
+                  </div>
+                  <p className="text-xs">
+                    Thời gian cập nhật đơn hàng là 24 - 48H kể từ khi đặt hàng
+                    thành công. Nếu sau 48H không thấy hiển thị đơn tức là đơn
+                    không được ghi nhận trên app.
+                  </p>
                 </div>
-                <p className="text-xs">
-                  Hoàn tiền được tính bằng giá trị đơn hàng sau khi đã áp mã
-                  giảm giá, mã MPVC... nên số tiền có thể bé hơn dự kiến trên
-                  web.
-                </p>
-              </div>
-              <div className="flex items-center border-b last:border-none">
-                <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
-                  <IconShoppingCart stroke={2} />
+                <div className="flex items-center border-b last:border-none">
+                  <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
+                    <IconCalendar stroke={2} />
+                  </div>
+                  <p className="text-xs">
+                    Thời gian duyệt đơn hàng Shopee là 30 ngày, Lazada là 45
+                    ngày và Tiktok là 7 ngày kể từ khi khách hàng bấm Đã nhận
+                    hàng trên app.
+                  </p>
                 </div>
-                <p className="text-xs">
-                  Để nhận được tối đa số tiền hoàn, bạn nên mua các sản phẩm
-                  cùng Shop. Trường hợp nhiều sản phẩm ở nhiều Shop khác nhau,
-                  bạn nên tách lẻ đơn của từng Shop.
-                </p>
-              </div>
-              <div className="flex items-center border-b last:border-none">
-                <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
-                  <IconPhone stroke={2} />
+                <div className="flex items-center border-b last:border-none">
+                  <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
+                    <IconMoneybag stroke={2} />
+                  </div>
+                  <p className="text-xs">
+                    Số dư hoàn tiền có thể rút tối thiểu là 10.000đ và khả dụng
+                    rút số dư vào 10H ngày 18, 29, 30 hàng tháng
+                  </p>
                 </div>
-                <p className="text-xs">
-                  Chỉ chấp nhận các đơn hàng phát sinh trên điện thoại và mỗi
-                  lần mua hàng chỉ mua 1 đơn duy nhất. Mua đơn thứ 2 trở đi cần
-                  quay trở lại website để dán hoàn tiền như ban đầu.
-                </p>
               </div>
             </div>
-          </div>
-          <div className="p-2">
-            <h3 className="text-xs font-bold text text-orange-600 py-1">
-              ĐIỀU KIỆN TỪ CHỐI HOÀN TIỀN
-            </h3>
-            <div className="rounded-xl border">
-              <div className="flex items-center justify-start border-b last:border-none">
-                <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
-                  <IconLivePhoto stroke={2} />
+            <div className="p-2">
+              <h3 className="text-xs font-bold text text-orange-600 py-1">
+                ĐIỀU KIỆN CHẤP NHẬN HOÀN TIỀN
+              </h3>
+              <div className="rounded-xl border">
+                <div className="flex items-center border-b last:border-none">
+                  <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
+                    <IconInfoCircle stroke={2} />
+                  </div>
+                  <p className="text-xs">
+                    Hoàn tiền được tính bằng giá trị đơn hàng sau khi đã áp mã
+                    giảm giá, mã MPVC... nên số tiền có thể bé hơn dự kiến trên
+                    web.
+                  </p>
                 </div>
-                <p className="text-xs">
-                  Không ghi nhận hoàn tiền cho các đơn hàng phát sinh từ
-                  LiveStream và Video.
-                </p>
+                <div className="flex items-center border-b last:border-none">
+                  <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
+                    <IconShoppingCart stroke={2} />
+                  </div>
+                  <p className="text-xs">
+                    Để nhận được tối đa số tiền hoàn, bạn nên mua các sản phẩm
+                    cùng Shop. Trường hợp nhiều sản phẩm ở nhiều Shop khác nhau,
+                    bạn nên tách lẻ đơn của từng Shop.
+                  </p>
+                </div>
+                <div className="flex items-center border-b last:border-none">
+                  <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
+                    <IconPhone stroke={2} />
+                  </div>
+                  <p className="text-xs">
+                    Chỉ chấp nhận các đơn hàng phát sinh trên điện thoại và mỗi
+                    lần mua hàng chỉ mua 1 đơn duy nhất. Mua đơn thứ 2 trở đi
+                    cần quay trở lại website để dán hoàn tiền như ban đầu.
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center border-b last:border-none">
-                <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
-                  <IconCircleCheck stroke={2} />
+            </div>
+            <div className="p-2">
+              <h3 className="text-xs font-bold text text-orange-600 py-1">
+                ĐIỀU KIỆN TỪ CHỐI HOÀN TIỀN
+              </h3>
+              <div className="rounded-xl border">
+                <div className="flex items-center justify-start border-b last:border-none">
+                  <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
+                    <IconLivePhoto stroke={2} />
+                  </div>
+                  <p className="text-xs">
+                    Không ghi nhận hoàn tiền cho các đơn hàng phát sinh từ
+                    LiveStream và Video.
+                  </p>
                 </div>
-                <p className="text-xs">
-                  Hoàn tiền có thể bị huỷ hoặc bằng OĐ do chính sách và quy định
-                  riêng của từng sàn. Xem chi tiết tại đây{" "}
-                  <a className="underline" href="https://longhousee.com/post/4">
-                    (https://longhousee.com/post/4)
-                  </a>
-                </p>
-              </div>
-              <div className="flex items-center border-b last:border-none">
-                <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
-                  <IconX stroke={2} />
+                <div className="flex items-center border-b last:border-none">
+                  <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
+                    <IconCircleCheck stroke={2} />
+                  </div>
+                  <p className="text-xs">
+                    Hoàn tiền có thể bị huỷ hoặc bằng OĐ do chính sách và quy
+                    định riêng của từng sàn. Xem chi tiết tại đây{" "}
+                    <a
+                      className="underline"
+                      href="https://longhousee.com/post/4"
+                    >
+                      (https://longhousee.com/post/4)
+                    </a>
+                  </p>
                 </div>
-                <p className="text-xs">
-                  Các đơn hàng có dấu hiệu gian lận, huỷ đơn, bom hàng, tích trữ
-                  hàng hóa, lạm dụng mã giảm giá,... sẽ bị huỷ hoàn tiền
-                </p>
+                <div className="flex items-center border-b last:border-none">
+                  <div className="h-14 aspect-square flex justify-center items-center text-center text-xl">
+                    <IconX stroke={2} />
+                  </div>
+                  <p className="text-xs">
+                    Các đơn hàng có dấu hiệu gian lận, huỷ đơn, bom hàng, tích
+                    trữ hàng hóa, lạm dụng mã giảm giá,... sẽ bị huỷ hoàn tiền
+                  </p>
+                </div>
               </div>
             </div>
           </div>
